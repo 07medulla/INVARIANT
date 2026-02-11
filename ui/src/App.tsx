@@ -3,8 +3,11 @@ import './App.css'
 
 const WORKER_URL = 'https://invariant-worker.proqruit.workers.dev'
 
+const EXTERNAL_ROLES = ['CANDIDATE', 'CLIENT'] as const
+const SECURE_ROLES = ['RECRUITER', 'FOUNDER', 'ADMIN'] as const
+
 type Endpoint = 'pipeline' | 'fluidintel' | 'envelope'
-type RoleKey = 'CANDIDATE' | 'CLIENT' | 'RECRUITER' | 'FOUNDER' | 'ADMIN'
+type RoleKey = typeof EXTERNAL_ROLES[number] | typeof SECURE_ROLES[number]
 
 type AccessProfile = {
   employeeCode: string
@@ -17,7 +20,6 @@ type RoleProfile = {
   label: string
   description: string
   requiresCode: boolean
-  // placeholder codes – swap with secrets in production
   code?: string
   composerHint: string
   humorLine: string
@@ -30,15 +32,15 @@ type RoleProfile = {
 const roleMatrix: Record<RoleKey, RoleProfile> = {
   CANDIDATE: {
     label: 'Candidate / Visitor',
-    description: 'Friendly intake lane with confidence-building tone.',
+    description: 'Confidence-inducing lane focused on interviews, schedules, and reassurance.',
     requiresCode: false,
-    composerHint: 'Share what you need help with (role, status update, scheduling question, etc.)',
+    composerHint: 'Share your role, interview details, or scheduling questions.',
     humorLine: 'Let’s keep it professional, but I still see you.',
     permissions: { showPayload: false, viewActivity: false }
   },
   CLIENT: {
     label: 'Client Executive',
-    description: 'Business-class tone. KPI snapshots only.',
+    description: 'Business-class tone. KPI summaries and delivery checkpoints only.',
     requiresCode: true,
     code: 'CLIENT-7320',
     composerHint: 'State engagement goals, talent gaps, or KPI questions.',
@@ -47,7 +49,7 @@ const roleMatrix: Record<RoleKey, RoleProfile> = {
   },
   RECRUITER: {
     label: 'Recruiter',
-    description: 'Execution-only lane using the ProQruit training canon.',
+    description: 'Executes playbooks from the ProQruit recruiter canon.',
     requiresCode: true,
     code: 'RECRUIT-8827',
     composerHint: 'Log candidate progress, interview prep, or escalation details.',
@@ -78,11 +80,33 @@ const accessStorageKey = 'invariant-access-profile'
 const baseUrlStorageKey = 'invariant-worker-url'
 const payloadStorageKey = 'invariant-payload-draft'
 const roleStorageKey = 'invariant-active-role'
+const publicCountKey = 'invariant-public-count'
+
+type ActivityEntry = {
+  id: string
+  endpoint: Endpoint
+  status: 'success' | 'error'
+  timestamp: string
+  summary: string
+}
+
+type ChatMessage = {
+  sender: 'XIRO' | 'YOU'
+  text: string
+}
+
+const detectRole = (text: string): RoleKey | null => {
+  const lower = text.toLowerCase()
+  if (/(medulla|admin|system)/.test(lower)) return 'ADMIN'
+  if (/(founder|lead|owner)/.test(lower)) return 'FOUNDER'
+  if (/(recruiter|talent partner)/.test(lower)) return 'RECRUITER'
+  if (/(client|customer|hiring manager)/.test(lower)) return 'CLIENT'
+  if (/(candidate|applicant|job)/.test(lower)) return 'CANDIDATE'
+  return null
+}
 
 const generateUUID = () => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0
     const v = c === 'x' ? r : (r & 0x3) | 0x8
@@ -153,14 +177,6 @@ const templateFor = (endpoint: Endpoint, issuedBy: string) => {
   }
 }
 
-type ActivityEntry = {
-  id: string
-  endpoint: Endpoint
-  status: 'success' | 'error'
-  timestamp: string
-  summary: string
-}
-
 function App() {
   const storedAccess = useMemo<AccessProfile>(() => {
     try {
@@ -173,8 +189,7 @@ function App() {
         accessTier: parsed.accessTier ?? 'OBSERVE',
         authToken: parsed.authToken ?? ''
       }
-    } catch (err) {
-      console.warn('Unable to parse access profile', err)
+    } catch {
       return { employeeCode: '', password: '', accessTier: 'OBSERVE', authToken: '' }
     }
   }, [])
@@ -187,12 +202,16 @@ function App() {
     if (['CANDIDATE', 'CLIENT', 'RECRUITER', 'FOUNDER', 'ADMIN'].includes(raw)) return raw as RoleKey
     return 'CANDIDATE'
   }, [])
+  const storedCount = useMemo(() => {
+    const raw = localStorage.getItem(publicCountKey)
+    return raw ? Number(raw) : 0
+  }, [])
 
   const [baseUrl, setBaseUrl] = useState(storedBaseUrl)
   const [endpoint, setEndpoint] = useState<Endpoint>('pipeline')
   const [role, setRole] = useState<RoleKey>(storedRole)
   const [payload, setPayload] = useState(
-    () => storedPayload ?? JSON.stringify(templateFor('pipeline', storedRole), null, 2)
+    () => storedPayload ?? JSON.stringify(templateFor('pipeline', roleMatrix[storedRole].label), null, 2)
   )
   const [composerText, setComposerText] = useState(roleMatrix[storedRole].composerHint)
   const [authToken, setAuthToken] = useState(storedAccess.authToken)
@@ -208,6 +227,17 @@ function App() {
   const [isVerified, setIsVerified] = useState(role === 'CANDIDATE')
   const [attempts, setAttempts] = useState(0)
   const [authMessage, setAuthMessage] = useState('')
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+    { sender: 'XIRO', text: 'Hey. Who is here? (candidate / client / recruiter / founder / admin).' }
+  ])
+  const [chatInput, setChatInput] = useState('')
+  const [publicCount, setPublicCount] = useState(storedCount)
+  const [chatLocked, setChatLocked] = useState(false)
+
+  const isFounder = role === 'FOUNDER'
+  const isAdmin = role === 'ADMIN'
+  const isRecruiter = role === 'RECRUITER'
+  const internalUnlocked = isVerified && (isFounder || isAdmin || isRecruiter)
 
   useEffect(() => {
     localStorage.setItem(baseUrlStorageKey, baseUrl)
@@ -241,6 +271,10 @@ function App() {
     }
   }, [role])
 
+  useEffect(() => {
+    localStorage.setItem(publicCountKey, publicCount.toString())
+  }, [publicCount])
+
   const loadTemplate = (target: Endpoint) => {
     setEndpoint(target)
     setPayload(JSON.stringify(templateFor(target, roleMatrix[role].label), null, 2))
@@ -266,7 +300,7 @@ function App() {
   const verifySecurityCode = () => {
     if (!roleMatrix[role].requiresCode) {
       setIsVerified(true)
-      setAuthMessage('Candidate lane unlocked. Feel free to interact.')
+      setAuthMessage('Visitor lane unlocked. Feel free to interact.')
       return
     }
     if (securityCode.trim() === roleMatrix[role].code) {
@@ -286,7 +320,7 @@ function App() {
   }
 
   const sendPayload = async () => {
-    if (!isVerified) {
+    if (!isVerified && roleMatrix[role].requiresCode) {
       setStatus('error')
       setErrorText('Authorization required before XIRO can transmit envelopes.')
       return
@@ -351,39 +385,226 @@ function App() {
     }
   }
 
+  const wittyPrompt = () => {
+    const quips = [
+      'Still waiting on the magic words: candidate, client, recruiter, founder, or admin.',
+      'Recruitment-only cortex here. Drop the lane keyword or stay in this holding pattern.',
+      'Nice try. Without the lane keyword I stay in external mode forever.',
+      'Three syllables: can-di-date. Or client, recruiter, founder, admin. Your call.',
+      'I’m stainless, not psychic. Say candidate, client, recruiter, founder, or admin.'
+    ]
+    return quips[Math.floor(Math.random() * quips.length)]
+  }
+
+  const handleChatSend = () => {
+    if (!chatInput.trim() || chatLocked) return
+    const text = chatInput.trim()
+    setChatHistory((prev) => [...prev, { sender: 'YOU', text }])
+    setChatInput('')
+
+    const detected = detectRole(text)
+    if (detected) {
+      if (detected !== role) {
+        setRole(detected)
+        setChatHistory((prev) => [
+          ...prev,
+          { sender: 'XIRO', text: `Alright ${roleMatrix[detected].label}. Present your keys if you have them.` }
+        ])
+      }
+    } else {
+      setChatHistory((prev) => [...prev, { sender: 'XIRO', text: wittyPrompt() }])
+      if (EXTERNAL_ROLES.includes(role)) {
+        const newCount = publicCount + 1
+        setPublicCount(newCount)
+        if (newCount >= 3) {
+          setChatLocked(true)
+          setChatHistory((prev) => [
+            ...prev,
+            { sender: 'XIRO', text: 'For extended support please email connect@proqruit.com. This lane stays limited to three queries.' }
+          ])
+        }
+      }
+      return
+    }
+
+    if (EXTERNAL_ROLES.includes(role)) {
+      const newCount = publicCount + 1
+      setPublicCount(newCount)
+      if (newCount >= 3) {
+        setChatLocked(true)
+        setChatHistory((prev) => [
+          ...prev,
+          { sender: 'XIRO', text: 'For extended support please email connect@proqruit.com. This lane stays limited to three queries.' }
+        ])
+      }
+    }
+  }
+
   const roleProfile = roleMatrix[role]
   const showPayloadEditor = roleProfile.permissions.showPayload
   const showActivity = roleProfile.permissions.viewActivity
+  const founderBusinessCards = [
+    {
+      title: 'Candidate falloff',
+      detail: '12% WoW drop · strongest cities: BLR, HYD, Pune',
+      cta: 'View funnel'
+    },
+    {
+      title: 'Schedules today',
+      detail: '31 interviews confirmed · 6 awaiting feedback',
+      cta: 'Open calendar'
+    },
+    {
+      title: 'Client spotlight',
+      detail: 'ReQruit Logistics · 14 roles active · 3 offers pending',
+      cta: 'See client deck'
+    },
+    {
+      title: 'Recruiter pulse',
+      detail: 'Top performer: Team North · 9 closures this week',
+      cta: 'View leaderboard'
+    }
+  ]
+
+  const adminSystemCards = [
+    {
+      title: 'Null Prime checksum',
+      detail: 'All prisms synced · variance < 0.01%',
+      cta: 'See digest'
+    },
+    {
+      title: 'Metacore delta',
+      detail: '5 new recruiter actions · 2 deferred · 0 escalations',
+      cta: 'Inspect log'
+    },
+    {
+      title: 'Recent directives',
+      detail: 'Envelope patches pushed · FLUIDINTEL idle · CIC clear',
+      cta: 'See directives'
+    }
+  ]
+
+  const recruiterOpsCards = [
+    {
+      title: 'Pipeline',
+      detail: '18 candidates in nurture · 7 require follow-up today',
+      cta: 'Open board'
+    },
+    {
+      title: 'Interview prep',
+      detail: '3 candidates awaiting briefing packs',
+      cta: 'Send prep'
+    },
+    {
+      title: 'Compliance',
+      detail: 'Background docs pending for 2 offers',
+      cta: 'Upload docs'
+    }
+  ]
+
+  const substrateStatuses = [
+    { label: 'ACE Gate', status: 'READY', note: 'No anomalies detected' },
+    { label: 'VAR', status: 'VERIFYING', note: '3 envelopes pending' },
+    { label: 'FLUIDINTEL', status: 'IDLE', note: 'Awaiting authorized execution' },
+    { label: 'NULL PRIME', status: 'STABLE', note: 'Checksum synced' }
+  ]
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <div>
-          <p className="eyebrow">XIRO_UI · ProQruit Neural Console</p>
-          <h1>XIRO conversational field kit</h1>
-          <p className="muted">Role-specific panes keep conversations inside the correct trust boundary.</p>
+    <div className={`xiro-shell ${internalUnlocked ? 'internal-unlocked' : ''}`}>
+      <section className="hero">
+        <div className="hero-overlay" />
+        <div className="hero-content">
+          <p className="hero-eyebrow">XIRO</p>
+          <h1>XIRO</h1>
+          <p className="powered">powered by ProQruit</p>
+          <p className="hero-sub">Neural field interface · stainless steel calm · recruitment-only cognition.</p>
+          <div className="hero-links">
+            <a href="https://proqruit.com/" target="_blank" rel="noreferrer">ProQruit</a>
+            <span>•</span>
+            <a href="mailto:connect@proqruit.com">connect@proqruit.com</a>
+            <span>•</span>
+            <span className="muted">Creator: Medulla</span>
+          </div>
         </div>
-        <div className="status-pill" data-state={status}>
-          <span className="dot" />
-          <span className="label">
-            {status === 'idle' && 'Idle'}
-            {status === 'loading' && 'Dispatching'}
-            {status === 'success' && 'Signal returned'}
-            {status === 'error' && 'Error'}
-          </span>
+      </section>
+
+      <section className="chat-panel">
+        <div className="chat-header">
+          <h2>Converse with XIRO</h2>
+          <p className="muted">Stay inside recruitment context. XIRO routes lanes automatically.</p>
         </div>
-      </header>
+        <div className="chat-history">
+          {chatHistory.map((msg, index) => (
+            <div key={`${msg.sender}-${index}`} className={`chat-bubble ${msg.sender === 'YOU' ? 'you' : 'xiro'}`}>
+              <span>{msg.text}</span>
+            </div>
+          ))}
+        </div>
+        <div className="chat-input">
+          <input
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Type your message"
+            disabled={chatLocked}
+          />
+          <button onClick={handleChatSend} disabled={chatLocked}>Send</button>
+        </div>
+        {chatLocked && <p className="muted">Lane locked. Continue via connect@proqruit.com.</p>}
+      </section>
+
+      {isVerified && isFounder && (
+        <section className="summary-grid business-grid">
+          {founderBusinessCards.map((slide) => (
+            <article className="summary-card founder-card" key={slide.title}>
+              <p className="summary-title">{slide.title}</p>
+              <p>{slide.detail}</p>
+              <button>{slide.cta}</button>
+            </article>
+          ))}
+        </section>
+      )}
+
+      {isVerified && isAdmin && (
+        <>
+          <section className="summary-grid admin-grid">
+            {adminSystemCards.map((slide) => (
+              <article className="summary-card admin-card" key={slide.title}>
+                <p className="summary-title">{slide.title}</p>
+                <p>{slide.detail}</p>
+                <button>{slide.cta}</button>
+              </article>
+            ))}
+          </section>
+          <section className="substrate-grid">
+            {substrateStatuses.map((item) => (
+              <article className="substrate-card" key={item.label}>
+                <p className="label">{item.label}</p>
+                <p className="status">{item.status}</p>
+                <p className="note">{item.note}</p>
+              </article>
+            ))}
+          </section>
+        </>
+      )}
+
+      {isVerified && isRecruiter && (
+        <section className="summary-grid recruiter-grid">
+          {recruiterOpsCards.map((slide) => (
+            <article className="summary-card recruiter-card" key={slide.title}>
+              <p className="summary-title">{slide.title}</p>
+              <p>{slide.detail}</p>
+              <button>{slide.cta}</button>
+            </article>
+          ))}
+        </section>
+      )}
 
       <section className="panels-grid">
         <div className="panel access">
-          <h2>Identity & pathway</h2>
+          <h2>Access stack</h2>
           <div className="form-control">
             <label htmlFor="role-select">Persona</label>
-            <select
-              id="role-select"
-              value={role}
-              onChange={(e) => setRole(e.target.value as RoleKey)}
-            >
+            <select id="role-select" value={role} onChange={(e) => setRole(e.target.value as RoleKey)}>
               {Object.entries(roleMatrix).map(([key, profile]) => (
                 <option key={key} value={key}>
                   {profile.label}
@@ -460,13 +681,11 @@ function App() {
         </div>
 
         <div className="panel payload">
-          <h2>Conversation composer</h2>
+          <h2>Envelope composer</h2>
           <p className="muted">{roleProfile.composerHint}</p>
           <div className="composer">
             <textarea value={composerText} onChange={(e) => setComposerText(e.target.value)} />
-            {showPayloadEditor && (
-              <button onClick={syncComposer}>Sync into payload</button>
-            )}
+            {showPayloadEditor && <button onClick={syncComposer}>Sync into payload</button>}
           </div>
 
           {showPayloadEditor ? (
@@ -475,7 +694,7 @@ function App() {
               <textarea className="payload-editor" value={payload} onChange={(e) => setPayload(e.target.value)} />
             </>
           ) : (
-            <p className="muted">Payload editor hidden for this persona. XIRO will wrap your text in a compliant envelope automatically.</p>
+            <p className="muted">Payload editor hidden for this persona. XIRO will wrap your text automatically.</p>
           )}
 
           <div className="actions-row">
@@ -490,7 +709,7 @@ function App() {
         <div className="panel responses">
           <h2>Signal return</h2>
           <pre className="response-window">{responseText || 'Awaiting response…'}</pre>
-          {showActivity && (
+          {showActivity ? (
             <>
               <h3>Activity</h3>
               <div className="activity-list">
@@ -506,10 +725,20 @@ function App() {
                 ))}
               </div>
             </>
+          ) : (
+            <p className="muted">Activity log hidden for public/candidate lanes.</p>
           )}
-          {!showActivity && <p className="muted">Activity log hidden for public/candidate lanes.</p>}
         </div>
       </section>
+
+      <footer className="meta-footer">
+        <p>XIRO · Stainless neural assistant</p>
+        <p>About · XIRO is the recruitment cognition prototype inside the INVARIANT system.</p>
+        <p>Creator · Medulla · ProQruit Inc.</p>
+        <p>
+          Contact · <a href="mailto:connect@proqruit.com">connect@proqruit.com</a>
+        </p>
+      </footer>
     </div>
   )
 }
