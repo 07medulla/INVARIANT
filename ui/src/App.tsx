@@ -228,11 +228,12 @@ function App() {
   const [attempts, setAttempts] = useState(0)
   const [authMessage, setAuthMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
-    { sender: 'XIRO', text: 'Hey. Who is here? (candidate / client / recruiter / founder / admin).' }
+    { sender: 'XIRO', text: 'Hey. Who is here?' }
   ])
   const [chatInput, setChatInput] = useState('')
   const [publicCount, setPublicCount] = useState(storedCount)
   const [chatLocked, setChatLocked] = useState(false)
+  const [showConsole, setShowConsole] = useState(false)
 
   const isFounder = role === 'FOUNDER'
   const isAdmin = role === 'ADMIN'
@@ -263,11 +264,12 @@ function App() {
     setComposerText(roleMatrix[role].composerHint)
     if (role === 'CANDIDATE') {
       setIsVerified(true)
-      setAuthMessage('Visitor lane stays open. Responses stay high-trust, low-noise.')
+      setAuthMessage('External mode active. Conversations stay recruitment-only.')
     } else {
       setIsVerified(false)
       setSecurityCode('')
       setAuthMessage('Enter your tier security code to unlock XIRO controls.')
+      setShowConsole(true)
     }
   }, [role])
 
@@ -387,11 +389,11 @@ function App() {
 
   const wittyPrompt = () => {
     const quips = [
-      'Still waiting on the magic words: candidate, client, recruiter, founder, or admin.',
-      'Recruitment-only cortex here. Drop the lane keyword or stay in this holding pattern.',
-      'Nice try. Without the lane keyword I stay in external mode forever.',
-      'Three syllables: can-di-date. Or client, recruiter, founder, admin. Your call.',
-      'I’m stainless, not psychic. Say candidate, client, recruiter, founder, or admin.'
+      'Still waiting on the magic word: candidate, client, recruiter, founder, or admin.',
+      'I run on keywords, not vibes. Say candidate, client, recruiter, founder, or admin.',
+      'Without the role keyword I stay in public mode forever.',
+      'Candidate, client, recruiter, founder, admin. Pick one and we move.',
+      'I’m stainless, not psychic. Drop the role keyword so I know who you are.'
     ]
     return quips[Math.floor(Math.random() * quips.length)]
   }
@@ -403,6 +405,8 @@ function App() {
     setChatInput('')
 
     const detected = detectRole(text)
+    const resultingRole = detected ?? role
+
     if (detected) {
       if (detected !== role) {
         setRole(detected)
@@ -413,21 +417,9 @@ function App() {
       }
     } else {
       setChatHistory((prev) => [...prev, { sender: 'XIRO', text: wittyPrompt() }])
-      if (EXTERNAL_ROLES.includes(role)) {
-        const newCount = publicCount + 1
-        setPublicCount(newCount)
-        if (newCount >= 3) {
-          setChatLocked(true)
-          setChatHistory((prev) => [
-            ...prev,
-            { sender: 'XIRO', text: 'For extended support please email connect@proqruit.com. This lane stays limited to three queries.' }
-          ])
-        }
-      }
-      return
     }
 
-    if (EXTERNAL_ROLES.includes(role)) {
+    if (!detected && EXTERNAL_ROLES.includes(resultingRole)) {
       const newCount = publicCount + 1
       setPublicCount(newCount)
       if (newCount >= 3) {
@@ -514,17 +506,12 @@ function App() {
       <section className="hero">
         <div className="hero-overlay" />
         <div className="hero-content">
-          <p className="hero-eyebrow">XIRO</p>
-          <h1>XIRO</h1>
-          <p className="powered">powered by ProQruit</p>
-          <p className="hero-sub">Neural field interface · stainless steel calm · recruitment-only cognition.</p>
-          <div className="hero-links">
-            <a href="https://proqruit.com/" target="_blank" rel="noreferrer">ProQruit</a>
-            <span>•</span>
-            <a href="mailto:connect@proqruit.com">connect@proqruit.com</a>
-            <span>•</span>
-            <span className="muted">Creator: Medulla</span>
+          <p className="hero-eyebrow">XIR</p>
+          <div className="hero-title">
+            <span>XIR</span>
+            <button className="zero-button" onClick={() => setShowConsole((prev) => !prev)}>0</button>
           </div>
+          <p className="hero-tagline">recruitment interface</p>
         </div>
       </section>
 
@@ -552,8 +539,8 @@ function App() {
         {chatLocked && <p className="muted">Lane locked. Continue via connect@proqruit.com.</p>}
       </section>
 
-      {isVerified && isFounder && (
-        <section className="summary-grid business-grid">
+      {showConsole && isVerified && isFounder && (
+        <section className="summary-grid business-grid fade-in">
           {founderBusinessCards.map((slide) => (
             <article className="summary-card founder-card" key={slide.title}>
               <p className="summary-title">{slide.title}</p>
@@ -564,9 +551,9 @@ function App() {
         </section>
       )}
 
-      {isVerified && isAdmin && (
+      {showConsole && isVerified && isAdmin && (
         <>
-          <section className="summary-grid admin-grid">
+          <section className="summary-grid admin-grid fade-in">
             {adminSystemCards.map((slide) => (
               <article className="summary-card admin-card" key={slide.title}>
                 <p className="summary-title">{slide.title}</p>
@@ -575,7 +562,7 @@ function App() {
               </article>
             ))}
           </section>
-          <section className="substrate-grid">
+          <section className="substrate-grid fade-in">
             {substrateStatuses.map((item) => (
               <article className="substrate-card" key={item.label}>
                 <p className="label">{item.label}</p>
@@ -587,8 +574,8 @@ function App() {
         </>
       )}
 
-      {isVerified && isRecruiter && (
-        <section className="summary-grid recruiter-grid">
+      {showConsole && isVerified && isRecruiter && (
+        <section className="summary-grid recruiter-grid fade-in">
           {recruiterOpsCards.map((slide) => (
             <article className="summary-card recruiter-card" key={slide.title}>
               <p className="summary-title">{slide.title}</p>
@@ -599,7 +586,8 @@ function App() {
         </section>
       )}
 
-      <section className="panels-grid">
+      {showConsole && (
+        <section className="panels-grid fade-in">
         <div className="panel access">
           <h2>Access stack</h2>
           <div className="form-control">
@@ -730,6 +718,7 @@ function App() {
           )}
         </div>
       </section>
+      )}
 
       <footer className="meta-footer">
         <p>XIRO · Stainless neural assistant</p>
