@@ -214,25 +214,15 @@ body::after {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.future-buttons {
+.panel button.verify {
   margin-top: 1.5rem;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.future-buttons div {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.future-buttons button {
-  flex: 1;
-  padding: 0.6rem;
-  border-radius: 2rem;
-  border: 1px dashed rgba(255, 255, 255, 0.3);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.6);
+  border-radius: 0.8rem;
+  border: none;
+  background: linear-gradient(120deg, #ff9d2f, #ff6020);
+  color: #050608;
+  font-weight: 600;
+  cursor: pointer;
+  height: 54px;
 }
 
 .payload .composer {

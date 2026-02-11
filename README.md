@@ -77,8 +77,10 @@ A neon “Neural Gate Console” now lives in `/ui` (Vite + React). It gives you
 - Endpoint presets (`/pipeline`, `/fluidintel`, `/envelope`).
 - Employee code + password inputs with tier selection (headers: `X-Employee-Code`, `X-User-Password`, `X-Access-Tier`). Credentials optionally persist in localStorage.
 - Optional bearer token header.
-- Message composer that syncs into the canonical JSON envelope editor.
-- Activity log + response viewer.
+- Role-aware personas (candidate, client, recruiter, founder, admin) with tier-specific UI + guardrails.
+- Dry-humor security gate: after 3 failed attempts users are asked to email medulla@proqruit.com.
+- Message composer that syncs into the canonical JSON envelope editor (hidden for visitor tiers).
+- Activity log + response viewer (suppressed for public lanes).
 - Placeholder “future integration” buttons (RecruitCRM, Sheets, multi-LLM mesh) ready for wiring hooks later.
 
 ### Run locally
