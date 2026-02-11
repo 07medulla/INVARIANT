@@ -23,6 +23,7 @@ The canonical INVARIANT geometry now ships as a Cloudflare Worker. Reference 1 
 │       └── secrets_service.ts (retained for future multi-platform integrations)
 ├── docs/                   # Null Prime corpus (protocols + prisms)
 └── src/                    # Reserved for higher-level clients (empty for now)
+└── ui/                     # Neon console (Vite + React) front-end for human ops
 ```
 
 ## Quick start
@@ -70,5 +71,31 @@ The default subdomain is `https://<worker-name>.proqruit.workers.dev`. Routes:
 - The `schema_checksum` field is still shape-validated only; wire it to a SHA-256 oracle when available.
 - Business-system adapters (`business_integrations.ts`, `firestore_service.ts`) remain as placeholders for future connectors (RecruitCRM, Sheets, etc.).
 - Do **not** modify the ACE/FLUIDINTEL implementations unless the Notion references change. All new behavior should live in wrappers or separate modules.
+
+## Neural console UI (chrome/mobile friendly)
+A neon “Neural Gate Console” now lives in `/ui` (Vite + React). It gives you a chatbox-like interface with:
+- Endpoint presets (`/pipeline`, `/fluidintel`, `/envelope`).
+- Employee code + password inputs with tier selection (headers: `X-Employee-Code`, `X-User-Password`, `X-Access-Tier`). Credentials optionally persist in localStorage.
+- Optional bearer token header.
+- Message composer that syncs into the canonical JSON envelope editor.
+- Activity log + response viewer.
+- Placeholder “future integration” buttons (RecruitCRM, Sheets, multi-LLM mesh) ready for wiring hooks later.
+
+### Run locally
+```bash
+cd ui
+npm install        # first run
+npm run dev        # opens http://localhost:5173 (use --host for LAN/mobile tests)
+```
+Use the “Worker endpoint” input to point at any deployment (default is `https://invariant-worker.proqruit.workers.dev`).
+
+### Build & ship to Cloudflare Pages
+1. `cd ui && npm run build` → emits static assets in `ui/dist`.
+2. Either:
+   - **Pages (recommended):** In the Cloudflare dashboard, create a Pages project pointing to this repo. Build command `npm run build`, output directory `ui/dist`, root directory `ui`.
+   - **Manual hosting:** Serve `ui/dist` from any static host.
+3. The UI talks directly to the Worker; no extra secrets are needed in the front-end.
+
+> ⚠️ Access credentials are stored only in the browser (localStorage). Do not enable persistence on shared devices.
 
 The repo is now ready for Cloudflare deployment while remaining faithful to the INVARIANT governance geometry. Review and authorize before running `npm run deploy`.
