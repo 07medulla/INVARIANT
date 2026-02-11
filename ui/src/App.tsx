@@ -236,11 +236,11 @@ function App() {
 
   const publicReply = (text: string) => {
     const answers = [
-      'Recruitment infrastructure. No theatre. Ask the specific variable.',
-      'ProQruit solves hiring entropy. If you need fluff, wrong channel.',
-      'Give me the context—city, client, stage. I’ll answer only what matters.',
-      'Everything public about ProQruit already lives at https://proqruit.com/. I compress, I don’t embellish.',
-      'If the question isn’t operational, you won’t like the response.'
+      'Hey, I keep the stainless bits to myself. Ask what you need and I’ll stay within the public rails.',
+      'Friendly reminder: I’m XIRO, not marketing. I’ll give you the useful slice, nothing more.',
+      'If you’re looking for ProQruit gossip, wrong interface. If you want clarity, keep talking.',
+      'I don’t overshare, but I won’t leave you guessing either. Give me context and we keep it clean.',
+      'Two rules: be direct, and don’t ask me to leak. Everything else is fair game.'
     ]
     return answers[Math.floor(Math.random() * answers.length)]
   }
@@ -621,7 +621,6 @@ function App() {
       )}
 
       <footer className="meta-footer">
-        <p>XIRO · recruitment interface</p>
         <p>Creator · Medulla · ProQruit Inc.</p>
         <p>Contact · <a href="mailto:connect@proqruit.com">connect@proqruit.com</a></p>
         {!showConsole && (
