@@ -230,7 +230,7 @@ function App() {
   const [loginEmployeeId, setLoginEmployeeId] = useState('')
   const [loginSecurityCode, setLoginSecurityCode] = useState('')
   const [publicChat, setPublicChat] = useState<ChatMessage[]>([
-    { sender: 'XIRO', text: 'Public XIRO online. Ask about ProQruit, hiring philosophy, or recruitment insights.' }
+    { sender: 'XIRO', text: 'Hey.' }
   ])
   const [publicInput, setPublicInput] = useState('')
 
@@ -259,7 +259,6 @@ function App() {
   const submitLoginOverlay = () => {
     setEmployeeCode(loginEmployeeId)
     setSecurityCode(loginSecurityCode)
-    setShowConsole(true)
     setShowLoginOverlay(false)
     setAuthMessage('Select your persona and verify with your tier code.')
   }
