@@ -230,27 +230,69 @@ function App() {
   const [loginEmployeeId, setLoginEmployeeId] = useState('')
   const [loginSecurityCode, setLoginSecurityCode] = useState('')
   const [publicChat, setPublicChat] = useState<ChatMessage[]>([
-    { sender: 'XIRO', text: 'Hey.' }
+    { sender: 'XIRO', text: 'Before we proceed, please confirm who I’m speaking with — candidate or client?' }
   ])
   const [publicInput, setPublicInput] = useState('')
+  const [publicRole, setPublicRole] = useState<'UNKNOWN' | 'CANDIDATE' | 'CLIENT'>('UNKNOWN')
+  const [publicCount, setPublicCount] = useState(0)
+  const [publicLocked, setPublicLocked] = useState(false)
 
-  const publicReply = (text: string) => {
+  const guardReply = () => (
+    'Curiosity noted. This interface stays on record. For deeper intelligence, route through connect@proqruit.com.'
+  )
+
+  const gentlePrompt = () => (
+    'Name the lane — candidate or client. I only move once that’s clear.'
+  )
+
+  const friendlyAck = (role: 'CANDIDATE' | 'CLIENT') => (
+    role === 'CANDIDATE'
+      ? 'Alright, candidate mode. I’ll keep it warm but we stay within public data.'
+      : 'Client confirmed. Let’s keep this concise and useful.'
+  )
+
+  const publicReply = (text: string): string => {
+    const lower = text.toLowerCase()
+    if (publicLocked) {
+      return 'Lane closed. Anything further goes via connect@proqruit.com.'
+    }
+
+    if (publicRole === 'UNKNOWN') {
+      const detected = lower.includes('candidate') ? 'CANDIDATE' : lower.includes('client') ? 'CLIENT' : null
+      if (detected) {
+        setPublicRole(detected)
+        return friendlyAck(detected)
+      }
+      const newCount = publicCount + 1
+      setPublicCount(newCount)
+      if (newCount >= 3) {
+        setPublicLocked(true)
+        return 'For more information or tailored intelligence reports, please contact us at connect@proqruit.com.'
+      }
+      return gentlePrompt()
+    }
+
+    if (/(secret|internal|handshake|confidential|token)/i.test(text)) {
+      return guardReply()
+    }
+
     const answers = [
-      'Hey, I keep the stainless bits to myself. Ask what you need and I’ll stay within the public rails.',
-      'Friendly reminder: I’m XIRO, not marketing. I’ll give you the useful slice, nothing more.',
-      'If you’re looking for ProQruit gossip, wrong interface. If you want clarity, keep talking.',
-      'I don’t overshare, but I won’t leave you guessing either. Give me context and we keep it clean.',
-      'Two rules: be direct, and don’t ask me to leak. Everything else is fair game.'
+      'Ground truth only: ProQruit scales precision hiring across India. What signal do you actually need?',
+      'I’m here for straight talk. Mention city, role, or context and I’ll keep it stripped down.',
+      'Recruitment is messy; we keep it surgical. Give me the lever you want pulled.',
+      'Calm in, clarity out. Ask the real question and I’ll respond with what’s public.',
+      'We keep secrets by default. Still, I can share the operational story if you narrow the frame.'
     ]
     return answers[Math.floor(Math.random() * answers.length)]
   }
 
   const handlePublicSend = () => {
-    if (!publicInput.trim()) return
+    if (!publicInput.trim() || publicLocked) return
     const text = publicInput.trim()
     setPublicChat((prev) => [...prev, { sender: 'YOU', text }])
     setPublicInput('')
-    setPublicChat((prev) => [...prev, { sender: 'XIRO', text: publicReply(text) }])
+    const reply = publicReply(text)
+    setPublicChat((prev) => [...prev, { sender: 'XIRO', text: reply }])
   }
 
   const openLoginOverlay = () => setShowLoginOverlay(true)
