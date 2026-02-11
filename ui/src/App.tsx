@@ -236,11 +236,11 @@ function App() {
 
   const publicReply = (text: string) => {
     const answers = [
-      'ProQruit focuses on precision recruitment across India’s tier 1-4 cities. Tell me what you want to explore.',
-      'Recruitment insight: consistent candidate experience + recruiter enablement drives the funnel.',
-      'You can learn more about ProQruit at https://proqruit.com/.',
-      'I can talk about ProQruit’s mission, talent intelligence, and public-facing updates.',
-      'Need hiring context? I synthesize what ProQruit shares publicly.'
+      'Recruitment infrastructure. No theatre. Ask the specific variable.',
+      'ProQruit solves hiring entropy. If you need fluff, wrong channel.',
+      'Give me the context—city, client, stage. I’ll answer only what matters.',
+      'Everything public about ProQruit already lives at https://proqruit.com/. I compress, I don’t embellish.',
+      'If the question isn’t operational, you won’t like the response.'
     ]
     return answers[Math.floor(Math.random() * answers.length)]
   }
@@ -417,7 +417,6 @@ function App() {
       <section className="hero">
         <div className="hero-overlay" />
         <div className="hero-content">
-          <p className="hero-eyebrow">XIRO</p>
           <h1>XIRO</h1>
           <p className="hero-tagline">powered by ProQruit</p>
           <div className="public-chat">
