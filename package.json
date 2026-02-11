@@ -1,0 +1,23 @@
+{
+  "name": "invariant-system",
+  "private": true,
+  "scripts": {
+    "lint": "eslint \"worker/src/**/*.{ts,tsx}\"",
+    "build": "tsup worker/src/index.ts --format esm --dts --out-dir dist",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250204.0",
+    "@types/node": "^20.11.17",
+    "eslint": "^8.56.0",
+    "eslint-config-google": "^0.14.0",
+    "tsup": "^7.2.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.28.0"
+  },
+  "dependencies": {
+    "zod": "^3.23.8",
+    "axios": "^1.6.7"
+  }
+}

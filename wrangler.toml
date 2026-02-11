@@ -1,0 +1,11 @@
+name = "invariant-worker"
+main = "dist/index.mjs"
+account_id = "1ecd0bdf6fa115e7f6adc9850abc375c"
+compatibility_date = "2025-02-06"
+
+[vars]
+GEOMETRY_VERSION = "XISM-1.0"
+
+[env.dev]
+
+[env.production]
