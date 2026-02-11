@@ -249,7 +249,7 @@ function App() {
   const friendlyAck = (role: 'CANDIDATE' | 'CLIENT') => {
     if (role === 'CANDIDATE') {
       setCandidateStage(0)
-      return 'Alright, candidate mode. Drop your name and who called—you’ll get steady answers only.'
+      return 'Alright, candidate mode. Drop your name and whoever called—even partial clues are fine.'
     }
     return 'Client confirmed. Let’s keep this concise and useful.'
   }
@@ -280,21 +280,29 @@ function App() {
     }
 
     if (publicRole === 'CANDIDATE') {
+      const lacksDetail = /(don'?t|do not) (know|remember)|no idea|not sure/i.test(text)
       if (candidateStage === 0) {
         setCandidateStage(1)
-        return 'Start with your name and the recruiter or partner who called. I’ll log it mentally, not publicly.'
+        return lacksDetail
+          ? 'No problem. Give me your name and whichever clue you do recall—city, role, or the number that rang you.'
+          : 'Great. Confirm your name and the recruiter/number that reached out so I can anchor the thread.'
       }
       if (candidateStage === 1) {
+        if (lacksDetail) {
+          return 'If you can’t place the recruiter, pass me the callback number or time window. Even partial data helps.'
+        }
         setCandidateStage(2)
-        return 'Good. Now tell me what’s unclear—slot timing, format, who’s interviewing you? I can align what’s been shared.'
+        return 'Logged. Now tell me what you need clarified—slot timing, format, prep, travel? I’ll keep it steady.'
       }
       const answers = [
         'If the invite mentioned a slot, I can echo it back. If it didn’t, say so and we’ll tighten it.',
         'Need prep pointers, travel help, or the dial-in? Ask it plainly and I’ll keep it on-record but discreet.',
-        'Interviews can get noisy. Highlight the detail you need stabilized and I’ll steady it.',
+        'Interviews get noisy. Highlight the detail you need stabilized and I’ll steady it.',
         'If the recruiter hasn’t confirmed something, mention it and I’ll reflect whatever’s already public.'
       ]
-      return answers[Math.floor(Math.random() * answers.length)]
+      return lacksDetail
+        ? 'Even “they called around noon from a Bangalore number” is enough. Give me that much and I can triangulate.'
+        : answers[Math.floor(Math.random() * answers.length)]
     }
 
     const answers = [
