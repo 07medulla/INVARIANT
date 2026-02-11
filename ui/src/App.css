@@ -125,6 +125,80 @@ body::before {
   color: rgba(255, 255, 255, 0.65);
 }
 
+.public-chat {
+  margin: 2rem auto 0;
+  max-width: 560px;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 6, 8, 0.8);
+  padding: 1.25rem;
+  text-align: left;
+}
+
+.public-chat .chat-history {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1rem;
+  min-height: 200px;
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.chat-bubble.xiro {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.chat-bubble.you {
+  align-self: flex-end;
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+  color: #050608;
+}
+
+.public-chat .chat-input {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.public-chat .chat-input input {
+  flex: 1;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+}
+
+.public-chat .chat-input input:focus {
+  outline: none;
+  border-color: #ff9d2f;
+  box-shadow: 0 0 0 2px rgba(255, 157, 47, 0.25);
+}
+
+.public-chat .chat-input button {
+  border: none;
+  border-radius: 1rem;
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+  color: #050608;
+  font-weight: 600;
+  padding: 0 1.5rem;
+  cursor: pointer;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -469,6 +543,76 @@ body::before {
 .login-button:hover,
 .login-button:focus {
   background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.login-card {
+  background: rgba(5, 6, 8, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.2rem;
+  padding: 2rem;
+  width: min(400px, 90%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-card h3 {
+  margin: 0;
+}
+
+.login-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.login-card input {
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+}
+
+.login-card input:focus {
+  outline: none;
+  border-color: #ff9d2f;
+  box-shadow: 0 0 0 2px rgba(255, 157, 47, 0.25);
+}
+
+.login-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.login-actions button {
+  flex: 1;
+  border-radius: 0.8rem;
+  border: none;
+  padding: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-actions button:not(.ghost) {
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+  color: #050608;
+}
+
+.login-actions button.ghost {
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 

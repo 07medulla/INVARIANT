@@ -225,19 +225,43 @@ function App() {
   const [isVerified, setIsVerified] = useState(role === 'CANDIDATE')
   const [attempts, setAttempts] = useState(0)
   const [authMessage, setAuthMessage] = useState('External mode active. Conversations stay recruitment-only.')
-  const [showConsole, setShowConsole] = useState<boolean>(() => typeof window !== 'undefined' && window.location.hash === '#console')
+  const [showConsole, setShowConsole] = useState(false)
+  const [showLoginOverlay, setShowLoginOverlay] = useState(false)
+  const [loginEmployeeId, setLoginEmployeeId] = useState('')
+  const [loginSecurityCode, setLoginSecurityCode] = useState('')
+  const [publicChat, setPublicChat] = useState<ChatMessage[]>([
+    { sender: 'XIRO', text: 'Public XIRO online. Ask about ProQruit, hiring philosophy, or recruitment insights.' }
+  ])
+  const [publicInput, setPublicInput] = useState('')
 
-  useEffect(() => {
-    const handler = () => setShowConsole(window.location.hash === '#console')
-    window.addEventListener('hashchange', handler)
-    return () => window.removeEventListener('hashchange', handler)
-  }, [])
+  const publicReply = (text: string) => {
+    const answers = [
+      'ProQruit focuses on precision recruitment across India’s tier 1-4 cities. Tell me what you want to explore.',
+      'Recruitment insight: consistent candidate experience + recruiter enablement drives the funnel.',
+      'You can learn more about ProQruit at https://proqruit.com/.',
+      'I can talk about ProQruit’s mission, talent intelligence, and public-facing updates.',
+      'Need hiring context? I synthesize what ProQruit shares publicly.'
+    ]
+    return answers[Math.floor(Math.random() * answers.length)]
+  }
 
-  const handleLogin = () => {
-    if (typeof window !== 'undefined') {
-      window.location.hash = '#console'
-    }
+  const handlePublicSend = () => {
+    if (!publicInput.trim()) return
+    const text = publicInput.trim()
+    setPublicChat((prev) => [...prev, { sender: 'YOU', text }])
+    setPublicInput('')
+    setPublicChat((prev) => [...prev, { sender: 'XIRO', text: publicReply(text) }])
+  }
+
+  const openLoginOverlay = () => setShowLoginOverlay(true)
+  const closeLoginOverlay = () => setShowLoginOverlay(false)
+
+  const submitLoginOverlay = () => {
+    setEmployeeCode(loginEmployeeId)
+    setSecurityCode(loginSecurityCode)
     setShowConsole(true)
+    setShowLoginOverlay(false)
+    setAuthMessage('Select your persona and verify with your tier code.')
   }
 
   useEffect(() => {
@@ -396,7 +420,24 @@ function App() {
         <div className="hero-content">
           <p className="hero-eyebrow">XIRO</p>
           <h1>XIRO</h1>
-          <p className="hero-tagline">recruitment interface</p>
+          <p className="hero-tagline">powered by ProQruit</p>
+          <div className="public-chat">
+            <div className="chat-history">
+              {publicChat.map((msg, idx) => (
+                <div key={`${msg.sender}-${idx}`} className={`chat-bubble ${msg.sender === 'YOU' ? 'you' : 'xiro'}`}>
+                  <span>{msg.text}</span>
+                </div>
+              ))}
+            </div>
+            <div className="chat-input">
+              <input
+                value={publicInput}
+                onChange={(e) => setPublicInput(e.target.value)}
+                placeholder="Ask XIRO about ProQruit"
+              />
+              <button onClick={handlePublicSend}>Send</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -586,9 +627,29 @@ function App() {
         <p>Creator · Medulla · ProQruit Inc.</p>
         <p>Contact · <a href="mailto:connect@proqruit.com">connect@proqruit.com</a></p>
         {!showConsole && (
-          <button className="login-button" onClick={handleLogin}>Login</button>
+          <button className="login-button" onClick={openLoginOverlay}>Login</button>
         )}
       </footer>
+
+      {showLoginOverlay && (
+        <div className="login-overlay" role="dialog" aria-modal="true">
+          <div className="login-card">
+            <h3>Internal login</h3>
+            <label>
+              Employee ID
+              <input value={loginEmployeeId} onChange={(e) => setLoginEmployeeId(e.target.value)} />
+            </label>
+            <label>
+              Security code
+              <input type="password" value={loginSecurityCode} onChange={(e) => setLoginSecurityCode(e.target.value)} />
+            </label>
+            <div className="login-actions">
+              <button onClick={submitLoginOverlay}>Enter console</button>
+              <button onClick={closeLoginOverlay} className="ghost">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
