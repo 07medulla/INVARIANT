@@ -236,6 +236,7 @@ function App() {
   const [publicRole, setPublicRole] = useState<'UNKNOWN' | 'CANDIDATE' | 'CLIENT'>('UNKNOWN')
   const [publicCount, setPublicCount] = useState(0)
   const [publicLocked, setPublicLocked] = useState(false)
+  const [candidateStage, setCandidateStage] = useState(0)
 
   const guardReply = () => (
     'Curiosity noted. This interface stays on record. For deeper intelligence, route through connect@proqruit.com.'
@@ -245,11 +246,13 @@ function App() {
     'Name the lane — candidate or client. I only move once that’s clear.'
   )
 
-  const friendlyAck = (role: 'CANDIDATE' | 'CLIENT') => (
-    role === 'CANDIDATE'
-      ? 'Alright, candidate mode. I’ll keep it warm but we stay within public data.'
-      : 'Client confirmed. Let’s keep this concise and useful.'
-  )
+  const friendlyAck = (role: 'CANDIDATE' | 'CLIENT') => {
+    if (role === 'CANDIDATE') {
+      setCandidateStage(0)
+      return 'Alright, candidate mode. Drop your name and who called—you’ll get steady answers only.'
+    }
+    return 'Client confirmed. Let’s keep this concise and useful.'
+  }
 
   const publicReply = (text: string): string => {
     const lower = text.toLowerCase()
@@ -274,6 +277,24 @@ function App() {
 
     if (/(secret|internal|handshake|confidential|token)/i.test(text)) {
       return guardReply()
+    }
+
+    if (publicRole === 'CANDIDATE') {
+      if (candidateStage === 0) {
+        setCandidateStage(1)
+        return 'Start with your name and the recruiter or partner who called. I’ll log it mentally, not publicly.'
+      }
+      if (candidateStage === 1) {
+        setCandidateStage(2)
+        return 'Good. Now tell me what’s unclear—slot timing, format, who’s interviewing you? I can align what’s been shared.'
+      }
+      const answers = [
+        'If the invite mentioned a slot, I can echo it back. If it didn’t, say so and we’ll tighten it.',
+        'Need prep pointers, travel help, or the dial-in? Ask it plainly and I’ll keep it on-record but discreet.',
+        'Interviews can get noisy. Highlight the detail you need stabilized and I’ll steady it.',
+        'If the recruiter hasn’t confirmed something, mention it and I’ll reflect whatever’s already public.'
+      ]
+      return answers[Math.floor(Math.random() * answers.length)]
     }
 
     const answers = [
