@@ -77,10 +77,10 @@ A neon “Neural Gate Console” now lives in `/ui` (Vite + React). It gives you
 - Endpoint presets (`/pipeline`, `/fluidintel`, `/envelope`).
 - Employee code + password inputs with tier selection (headers: `X-Employee-Code`, `X-User-Password`, `X-Access-Tier`). Credentials optionally persist in localStorage.
 - Optional bearer token header.
-- Landing hero with XIRO branding (“powered by ProQruit”) + neural animation background (neuron nodes blink when internal tiers unlock).
-- Center-stage chatbox that routes users by lane (candidate, client, recruiter, founder, admin) and only grants features after lane keyword + tier code.
-- Role-aware personas with tier-specific UI: recruiters see execution widgets, founders see business KPIs, Medulla sees full system/Null Prime summaries. Guardrails keep public users in external mode.
-- Public users limited to 3 chat queries before being redirected to connect@proqruit.com.
+- Landing hero is now pure XIRO branding with a neural metal background; login button lives in the footer and jumps to the console view.
+- Public surface is chat-free (external-only). Console access requires the login action + lane keyword + tier code.
+- Role-aware personas with tier-specific UI: recruiters see execution widgets, founders see business KPIs, Medulla sees full system/Null Prime summaries.
+- Guardrails keep public users in external mode until verified; contact remains connect@proqruit.com.
 - Tier security gate (codes) with dry-humor responses and admin escalation to joseph@proqruit.com.
 - Message composer that syncs into the canonical JSON envelope editor (hidden for visitor tiers).
 - Activity log + response viewer (suppressed for public lanes) and placeholder Null Prime summary cards for founders/admin.
