@@ -1,0 +1,27 @@
+{
+  "name": "invariant-functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "lint": "eslint --ext .ts src",
+    "deploy": "npm run build && firebase deploy --only functions",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
+  },
+  "dependencies": {
+    "@google-cloud/secret-manager": "^5.0.0",
+    "axios": "^1.6.7",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "eslint": "^8.56.0",
+    "eslint-config-google": "^0.14.0",
+    "typescript": "^5.3.3"
+  }
+}

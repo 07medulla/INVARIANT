@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  color-scheme: dark;
+  font-family: 'IBM Plex Mono', monospace;
+  background: #050608;
+  color: #f4f4f4;
+}
+
+body, html {
+  margin: 0;
+  min-height: 100%;
+}
+
+main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.panel {
+  width: min(900px, 100%);
+  border: 1px solid #2c3140;
+  background: rgba(8, 10, 15, 0.95);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+textarea {
+  width: 100%;
+  min-height: 260px;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #31384c;
+  background: #0b0f16;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+button {
+  flex: 1;
+  padding: 0.85rem 1rem;
+  border-radius: 999px;
+  border: 1px solid #4c70ff;
+  background: #4c70ff;
+  color: white;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+button.ghost {
+  background: transparent;
+  border-color: #2c3140;
+}
+
+pre {
+  background: #0b0f16;
+  border-radius: 12px;
+  border: 1px solid #272c3b;
+  padding: 1rem;
+  min-height: 140px;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}

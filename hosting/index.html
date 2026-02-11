@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>INVARIANT Console</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <section class="panel">
+        <h1>INVARIANT Runtime Console</h1>
+        <p>This lightweight UI exists solely to test the canonical JSON envelope before it reaches the runtime substrates.</p>
+        <label>
+          Invariant Envelope JSON
+          <textarea id="envelope" spellcheck="false" placeholder="{ ... }"></textarea>
+        </label>
+        <div class="actions">
+          <button id="submit">Send to Pipeline</button>
+          <button id="clear" class="ghost">Clear</button>
+        </div>
+        <pre id="result">Ready.</pre>
+      </section>
+    </main>
+    <script type="module" src="script.ts"></script>
+  </body>
+</html>
