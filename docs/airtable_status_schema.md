@@ -36,3 +36,10 @@ Actions:
   - `Currently Active`: filter `Status Logs` to latest record per recruiter with action in {Login, Break end} and no later Logout.
   - `Overdue Logout`: triggers when last action was Login more than N hours ago.
 - Extend ingestion script (`airtable_ingest.py`) to pull Status Logs table for daily summaries.
+
+## Identified Gaps from Architecture Probing
+(Use this section to track unresolved risks)
+- Need property-based/invariant tests proving "no token → no execution".
+- Biggest risk: dependency fragility (Sheets/Airtable). Mitigation plan required.
+- Pure deterministic tests for ACE (LLM-free) to ensure governance isolation.
+- Declare optimization priorities (correctness/auditability > latency) in README.
